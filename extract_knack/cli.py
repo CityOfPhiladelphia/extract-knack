@@ -140,7 +140,8 @@ def main():
 def generate_schema(knack_app_id, knack_app_key, object_id, indent):
     schema = get_schema(knack_app_id, knack_app_key, object_id)
 
-    click.echo(json.dumps(schema, indent=indent))
+    json.dump(schema, sys.stdout, indent=indent)
+    sys.stdout.flush()
 
 @main.command('extract-records')
 @click.argument('knack_app_id')
@@ -161,6 +162,8 @@ def extract_records(knack_app_id, knack_app_key, object_id):
         for record in records_batch:
             out_record = convert_to_csv_row(schema, record)
             writer.writerow(out_record)
+
+    sys.stdout.flush()
 
 if __name__ == '__main__':
     main()
