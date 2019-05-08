@@ -9,7 +9,8 @@ setup(
     install_requires=[
         'click==6.7',
         'requests==2.18.4',
-        'stringcase==1.2.0'
+        'stringcase==1.2.0',
+        'boto3==1.9.145'
     ],
     entry_points={
         'console_scripts': [

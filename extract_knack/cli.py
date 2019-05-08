@@ -6,6 +6,8 @@ import sys
 import click
 import requests
 import stringcase
+import boto3
+
 
 def get_type(knack_type):
     if knack_type == 'boolean':
@@ -128,6 +130,10 @@ def convert_to_csv_row(schema, record):
 
     return out
 
+def load_to_s3(s3_bucket, s3_key, file_path):
+    s3 = boto3.resource('s3')
+    s3.Object(s3_bucket, s3_key).put(Body=open(file_path, 'rb'))
+
 @click.group()
 def main():
     pass
@@ -137,7 +143,10 @@ def main():
 @click.argument('knack_app_key')
 @click.argument('object_id')
 @click.option('--indent', type=int, default=None)
-def generate_schema(knack_app_id, knack_app_key, object_id, indent):
+def generate_schema(knack_app_id, 
+                    knack_app_key, 
+                    object_id, 
+                    indent):
     schema = get_schema(knack_app_id, knack_app_key, object_id)
 
     json.dump(schema, sys.stdout, indent=indent)
@@ -147,7 +156,9 @@ def generate_schema(knack_app_id, knack_app_key, object_id, indent):
 @click.argument('knack_app_id')
 @click.argument('knack_app_key')
 @click.argument('object_id')
-def extract_records(knack_app_id, knack_app_key, object_id):
+def extract_records(knack_app_id, 
+                    knack_app_key, 
+                    object_id):
     schema = get_schema(knack_app_id, knack_app_key, object_id)
 
     headers = []
@@ -164,6 +175,60 @@ def extract_records(knack_app_id, knack_app_key, object_id):
             writer.writerow(out_record)
 
     sys.stdout.flush()
+
+@main.command('generate-schema')
+@click.argument('knack_app_id')
+@click.argument('knack_app_key')
+@click.argument('object_id')
+@click.option('--indent', type=int, default=None)
+@click.option('--s3_bucket')
+@click.option('--s3_key')
+def generate_schema_to_s3(knack_app_id, 
+                          knack_app_key, 
+                          object_id, 
+                          indent,
+                          s3_bucket,
+                          s3_key):
+    schema = get_schema(knack_app_id, knack_app_key, object_id)
+
+    output_file = 'schema.json'
+
+    with open(output_file, 'w') as f:
+        json.dump(schema, output_file, indent=indent)
+
+    load_to_s3(s3_bucket, s3_key, output_file)
+
+@main.command('extract-records-to-s3')
+@click.argument('knack_app_id')
+@click.argument('knack_app_key')
+@click.argument('object_id')
+@click.option('--s3_bucket')
+@click.option('--s3_key')
+def extract_records_to_s3(knack_app_id, 
+                          knack_app_key, 
+                          object_id,
+                          s3_bucket,
+                          s3_key):
+    schema = get_schema(knack_app_id, knack_app_key, object_id)
+
+    headers = []
+    for field in schema['fields']:
+        headers.append(field['name'])
+    print(headers)
+
+    output_file = 'knack_extract.csv'
+
+    with open(output_file, 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+
+        writer.writeheader()
+
+        for records_batch in get_records(knack_app_id, knack_app_key, object_id):
+            for record in records_batch:
+                out_record = convert_to_csv_row(schema, record)
+                writer.writerow(out_record)
+
+    load_to_s3(s3_bucket, s3_key, output_file)
 
 if __name__ == '__main__':
     main()
