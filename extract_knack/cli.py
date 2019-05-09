@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import csv
 import sys
+import os
 
 import click
 import requests
@@ -184,7 +185,11 @@ def extract_records(knack_app_id,
     if (s3_bucket and s3_key):
         output_file = 'knack_extract.csv'
 
-        with open(output_file, 'w') as f:
+        # On Linux, save to tmp folder
+        if os.name != 'nt':
+            output_file = '/tmp/{}'.format(output_file)
+        
+        with open(output_file, 'w', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=headers)
 
             writer.writeheader()
