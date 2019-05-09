@@ -38,3 +38,8 @@ extract-knack extract-records \
               --s3_bucket my-s3-bucket \
               --s3_key dir/schema_name.json
 ```
+
+## Installation
+```bash
+pip install git+https://github.com/CityOfPhiladelphia/extract-knack#egg=extract_knack
+```
