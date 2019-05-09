@@ -143,47 +143,9 @@ def main():
 @click.argument('knack_app_key')
 @click.argument('object_id')
 @click.option('--indent', type=int, default=None)
+@click.option('--s3_bucket', default=None)
+@click.option('--s3_key', default=None)
 def generate_schema(knack_app_id, 
-                    knack_app_key, 
-                    object_id, 
-                    indent):
-    schema = get_schema(knack_app_id, knack_app_key, object_id)
-
-    json.dump(schema, sys.stdout, indent=indent)
-    sys.stdout.flush()
-
-@main.command('extract-records')
-@click.argument('knack_app_id')
-@click.argument('knack_app_key')
-@click.argument('object_id')
-def extract_records(knack_app_id, 
-                    knack_app_key, 
-                    object_id):
-    schema = get_schema(knack_app_id, knack_app_key, object_id)
-
-    headers = []
-    for field in schema['fields']:
-        headers.append(field['name'])
-
-    writer = csv.DictWriter(sys.stdout, fieldnames=headers)
-
-    writer.writeheader()
-
-    for records_batch in get_records(knack_app_id, knack_app_key, object_id):
-        for record in records_batch:
-            out_record = convert_to_csv_row(schema, record)
-            writer.writerow(out_record)
-
-    sys.stdout.flush()
-
-@main.command('generate-schema')
-@click.argument('knack_app_id')
-@click.argument('knack_app_key')
-@click.argument('object_id')
-@click.option('--indent', type=int, default=None)
-@click.option('--s3_bucket')
-@click.option('--s3_key')
-def generate_schema_to_s3(knack_app_id, 
                           knack_app_key, 
                           object_id, 
                           indent,
@@ -191,35 +153,50 @@ def generate_schema_to_s3(knack_app_id,
                           s3_key):
     schema = get_schema(knack_app_id, knack_app_key, object_id)
 
-    output_file = 'schema.json'
+    if (s3_bucket and s3_key):
+        output_file = 'schema.json'
 
-    with open(output_file, 'w') as f:
-        json.dump(schema, output_file, indent=indent)
+        with open(output_file, 'w') as f:
+            json.dump(schema, f, indent=indent)
 
-    load_to_s3(s3_bucket, s3_key, output_file)
+        load_to_s3(s3_bucket, s3_key, output_file)
+    else:
+        json.dump(schema, sys.stdout, indent=indent)
+        sys.stdout.flush()
 
-@main.command('extract-records-to-s3')
+@main.command('extract-records')
 @click.argument('knack_app_id')
 @click.argument('knack_app_key')
 @click.argument('object_id')
-@click.option('--s3_bucket')
-@click.option('--s3_key')
-def extract_records_to_s3(knack_app_id, 
-                          knack_app_key, 
-                          object_id,
-                          s3_bucket,
-                          s3_key):
+@click.option('--s3_bucket', default=None)
+@click.option('--s3_key', default=None)
+def extract_records(knack_app_id, 
+                    knack_app_key, 
+                    object_id,
+                    s3_bucket,
+                    s3_key):
     schema = get_schema(knack_app_id, knack_app_key, object_id)
 
     headers = []
     for field in schema['fields']:
         headers.append(field['name'])
-    print(headers)
 
-    output_file = 'knack_extract.csv'
+    if (s3_bucket and s3_key):
+        output_file = 'knack_extract.csv'
 
-    with open(output_file, 'w') as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
+        with open(output_file, 'w') as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+
+            writer.writeheader()
+
+            for records_batch in get_records(knack_app_id, knack_app_key, object_id):
+                for record in records_batch:
+                    out_record = convert_to_csv_row(schema, record)
+                    writer.writerow(out_record)
+
+        load_to_s3(s3_bucket, s3_key, output_file)
+    else:
+        writer = csv.DictWriter(sys.stdout, fieldnames=headers)
 
         writer.writeheader()
 
@@ -228,7 +205,7 @@ def extract_records_to_s3(knack_app_id,
                 out_record = convert_to_csv_row(schema, record)
                 writer.writerow(out_record)
 
-    load_to_s3(s3_bucket, s3_key, output_file)
+        sys.stdout.flush()
 
 if __name__ == '__main__':
     main()
