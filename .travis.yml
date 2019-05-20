@@ -1,0 +1,46 @@
+sudo: required
+
+language: python
+python: "3.5"
+
+addons:
+  apt:
+    packages:
+      - python-virtualenv
+      - python3-dev
+      - build-essential
+
+services:
+  - docker
+
+before_install:
+  - chmod +x .travis/*.sh
+
+install: 
+  # setuptools didn't play nicely with git dependencies so we'll have to just install from github
+  - pip install git+https://github.com/CityOfPhiladelphia/extract-knack#egg=extract_knack awscli
+
+script:
+  - echo "no tests!" # put testing scripts here once they're written
+  - .travis/build_lambda.sh
+
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY_ID
+    secret_access_key: $AWS_SECRET_ACCESS_KEY
+    bucket: 'citygeo-airflow-databridge2'
+    on:
+      branch: master
+    skip_cleanup: true
+    local-dir: dist
+    upload-dir: lambda
+  - provider: script
+    script: .travis/deploy_lambda.sh
+    on:
+      branch: master
+    skip_cleanup: true
+  - provider: script
+    script: .travis/deploy_ecr.sh
+    on:
+      branch: master
+    skip_cleanup: true
