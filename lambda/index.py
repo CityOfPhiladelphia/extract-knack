@@ -17,9 +17,9 @@ def handler(event, context):
 
     if command_name == 'extract-records':
         extract_records(
-            knack_app_id=command['knack_app_id'],
-            knack_app_key=command['knack_app_key'],
-            object_id=command['object_id'],
+            knack_app_id=command['app-id'],
+            knack_app_key=command['app-key'],
+            object_id=command['object-id'],
             s3_bucket=command['s3_bucket'],
             s3_key=command['s3_key']
         )

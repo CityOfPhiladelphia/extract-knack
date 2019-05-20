@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/CityOfPhiladelphia/extract-knack.svg?branch=master)](https://travis-ci.com/CityOfPhiladelphia/extract-knack)
+
 # extract-knack
 Command line tool to extract data and schemas from Knack.
 
@@ -43,3 +45,6 @@ extract-knack extract-records \
 ```bash
 pip install git+https://github.com/CityOfPhiladelphia/extract-knack#egg=extract_knack
 ```
+
+## Deployment
+When a commit is made to master, Travis CI bundles the code and its dependencies into a zip file, loads it to S3, and then publishes a new version of a lambda function using that updated zip file in S3. Additionally, Travis CI builds a docker image with an installed version of this repo and pushes it to ECR.
