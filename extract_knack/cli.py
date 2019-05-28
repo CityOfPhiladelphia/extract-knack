@@ -165,17 +165,11 @@ def generate_schema(knack_app_id,
         json.dump(schema, sys.stdout, indent=indent)
         sys.stdout.flush()
 
-@main.command('extract-records')
-@click.argument('knack_app_id')
-@click.argument('knack_app_key')
-@click.argument('object_id')
-@click.option('--s3_bucket', default=None)
-@click.option('--s3_key', default=None)
-def extract_records(knack_app_id, 
-                    knack_app_key, 
-                    object_id,
-                    s3_bucket,
-                    s3_key):
+def extract_records_inner(knack_app_id, 
+                          knack_app_key, 
+                          object_id,
+                          s3_bucket,
+                          s3_key):
     schema = get_schema(knack_app_id, knack_app_key, object_id)
 
     headers = []
@@ -211,6 +205,23 @@ def extract_records(knack_app_id,
                 writer.writerow(out_record)
 
         sys.stdout.flush()
+
+@main.command('extract-records')
+@click.argument('knack_app_id')
+@click.argument('knack_app_key')
+@click.argument('object_id')
+@click.option('--s3_bucket', default=None)
+@click.option('--s3_key', default=None)
+def extract_records(knack_app_id, 
+                    knack_app_key, 
+                    object_id,
+                    s3_bucket,
+                    s3_key):
+    extract_records_inner(knack_app_id, 
+                          knack_app_key, 
+                          object_id, 
+                          s3_bucket, 
+                          s3_key)
 
 if __name__ == '__main__':
     main()
