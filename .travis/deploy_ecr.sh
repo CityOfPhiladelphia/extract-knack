@@ -2,7 +2,7 @@
 
 set -e
 
-REPO_NAME=airflow-extract-knack-worker
+REPO_NAME=airflow-extract-knack-worker-$ENVIRONMENT
 
 eval $(aws ecr get-login --no-include-email --region us-east-1)
 docker build -t $REPO_NAME .

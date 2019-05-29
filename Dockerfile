@@ -49,8 +49,10 @@ RUN set -ex \
 
 # Cache bust
 ENV updated-adds-on 5-9-2019
+COPY extract_knack /extract_knack
+COPY setup.py /setup.py
 RUN set -ex \
-    && pip3 install git+https://github.com/CityOfPhiladelphia/extract-knack#egg=extract_knack
+    && pip3 install -e .
 
 USER worker
 #CMD ["/bin/bash"] 

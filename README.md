@@ -47,4 +47,6 @@ pip install git+https://github.com/CityOfPhiladelphia/extract-knack#egg=extract_
 ```
 
 ## Deployment
-When a commit is made to master, Travis CI bundles the code and its dependencies into a zip file, loads it to S3, and then publishes a new version of a lambda function using that updated zip file in S3. Additionally, Travis CI builds a docker image with an installed version of this repo and pushes it to ECR.
+When a commit is made to master or test, Travis CI bundles the code and its dependencies into a zip file, loads it to S3, and then publishes a new version of a lambda function using that updated zip file in S3. Additionally, Travis CI builds a docker image with an installed version of this repo and pushes it to ECR.
+
+For this reason you should make changes to the test branch, make sure they pass automated tests and manual QA testing before making any changes to master.

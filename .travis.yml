@@ -14,11 +14,17 @@ services:
   - docker
 
 before_install:
+  - |
+      if [ "$TRAVIS_BRANCH" = "test" ]; then
+        export ENVIRONMENT="test"
+      elif [ "$TRAVIS_BRANCH" = "master" ]; then
+        export ENVIRONMENT="prod"
+      fi
   - chmod +x .travis/*.sh
 
 install: 
   # setuptools didn't play nicely with git dependencies so we'll have to just install from github
-  - pip install git+https://github.com/CityOfPhiladelphia/extract-knack#egg=extract_knack awscli
+  - pip install -e . awscli
 
 script:
   - echo "no tests!" # put testing scripts here once they're written
@@ -30,17 +36,20 @@ deploy:
     secret_access_key: $AWS_SECRET_ACCESS_KEY
     bucket: 'citygeo-airflow-databridge2'
     on:
-      branch: master
+      all_branches: true
+      condition: $TRAVIS_BRANCH =~ ^master|test$
     skip_cleanup: true
     local-dir: dist
     upload-dir: lambda
   - provider: script
     script: .travis/deploy_lambda.sh
     on:
-      branch: master
+      all_branches: true
+      condition: $TRAVIS_BRANCH =~ ^master|test$
     skip_cleanup: true
   - provider: script
     script: .travis/deploy_ecr.sh
     on:
-      branch: master
+      all_branches: true
+      condition: $TRAVIS_BRANCH =~ ^master|test$
     skip_cleanup: true
