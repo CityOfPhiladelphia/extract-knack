@@ -24,7 +24,7 @@ before_install:
 
 install: 
   # setuptools didn't play nicely with git dependencies so we'll have to just install from github
-  - pip install -e . awscli
+  - pip install git+https://github.com/CityOfPhiladelphia/extract-knack.git@$TRAVIS_BRANCH#egg=extract-knack awscli
 
 script:
   - echo "no tests!" # put testing scripts here once they're written
