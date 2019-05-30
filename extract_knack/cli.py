@@ -135,6 +135,10 @@ def load_to_s3(s3_bucket, s3_key, file_path):
     s3 = boto3.resource('s3')
     s3.Object(s3_bucket, s3_key).put(Body=open(file_path, 'rb'))
 
+def clean_up(file_path):
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+
 @click.group()
 def main():
     pass
@@ -194,6 +198,7 @@ def extract_records_inner(knack_app_id,
                     writer.writerow(out_record)
 
         load_to_s3(s3_bucket, s3_key, output_file)
+        clean_up(output_file)
     else:
         writer = csv.DictWriter(sys.stdout, fieldnames=headers)
 
