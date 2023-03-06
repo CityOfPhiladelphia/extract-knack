@@ -10,7 +10,8 @@ setup(
         'click==6.7',
         'requests==2.20.0',
         'stringcase==1.2.0',
-        'boto3==1.9.145'
+        'boto3>=1.4.4, <=1.9.145'
+#        'boto3==1.9.145'
     ],
     entry_points={
         'console_scripts': [
