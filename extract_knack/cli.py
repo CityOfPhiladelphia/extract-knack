@@ -100,17 +100,22 @@ def convert_type(local_type, knack_type, value):
     if value == None or value == '':
         return None
     if knack_type == 'connection':
-        return json.dumps(list(map(lambda x: x['id'], value)))
+        if isinstance(value, list) and len(value) > 1:
+            raise NotImplementedError("Value has more than one element, not currently supported...")
+        # map value to "identifier" key of value (prepared as value of "_raw" key in record in convert_to_csv_row)
+        value =  list(map(lambda x: x['identifier'], value))
     if knack_type == 'phone':
-        return value['full']
+        value =  value['full']
     if knack_type == 'date_time':
-        return datetime.strptime(value['timestamp'], '%m/%d/%Y %I:%M %p').isoformat() + 'Z'
+        value =  datetime.strptime(value['timestamp'], '%m/%d/%Y %I:%M %p').isoformat() + 'Z'
     if local_type == 'array':
-        if not isinstance(value, list):
-            return json.dumps([value])
-        return json.dumps(value)
+        if isinstance(value, list):
+            if len(value) > 1:
+                raise NotImplementedError("Value has more than one element, not currently supported...")
+            else:
+                value = value[0] if value else None
     if local_type == 'object':
-        return json.dumps(value)
+        value =  json.dumps(value)
     return value
 
 def convert_to_csv_row(schema, record):
